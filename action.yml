@@ -1,0 +1,16 @@
+name: notify_test_file_update_between_latest_two_merge_commits
+description: "notify updated test files between latast merge commits"
+branding:
+  icon: "user-check"
+  color: "white"
+runs:
+  using: "composite"
+  steps:
+    # 下準備
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+    - uses: actions/checkout@v3
+
+    # コミットID取得
+    
