@@ -1,0 +1,8 @@
+name: Execute Top Level Action
+on: workflow_dispatch
+jobs:
+  Execute-Top-Level-Action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./
