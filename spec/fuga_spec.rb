@@ -2,9 +2,9 @@
 
 require "rails_helper"
 
-RSpec.describe "hoge" do
+RSpec.describe "fuga" do
   context "when calculated" do
-    subject { 1 + 2 }
-    it { is_expected.to eq(3) }
+    subject { 1 + 1 }
+    it { is_expected.to eq(2) }
   end
 end

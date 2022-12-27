@@ -6,11 +6,21 @@ branding:
 runs:
   using: "composite"
   steps:
+    # TODO カスタムアクション使用元でもカスタムアクションのリポジトリを取得できるようにして、カスタムアクション内のパーシャルスクリプトを参照してこのファイルをすっきりさせる
+
     # 下準備
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.0'
     - uses: actions/checkout@v3
+    # rubyをsetupしようと思ったがactでM1Mac上でactを使ってrubyをセットアップしようとするとエラーが出るのでrubyを使わず一時的にawk使用
+#    - uses: ruby/setup-ruby@v1
+#      with:
+#        ruby-version: '3.0'
 
     # コミットID取得
-    
+    - run: echo "commit1=$( git log --oneline | head -n 100 | grep 'Merge pull request' | awk '{print $1}' | head -n 1 )" >>$GITHUB_OUTPUT
+      id: get_commits_1
+    - run: echo "commit2=$( git log --oneline | head -n 100 | grep 'Merge pull request' | awk '{print $1}' | tail -n 1 )" >>$GITHUB_OUTPUT
+      id: get_commits_2
+#    - run: echo "${{steps.get_commits_1.outputs.commit2}}" # デバッグ
+
+    # 差分取得
+    - run: git diff ${{steps.get_commits_2.outputs.commit2}}..${{steps.get_commits_1.outputs.commit1}} --numstat

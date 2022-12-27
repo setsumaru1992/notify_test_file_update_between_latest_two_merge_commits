@@ -1,1 +1,2 @@
 # notify_test_file_update_between_latest_two_merge_commits
+PRマージ時にテスト追加があった場合に通知するカスタムアクション。
