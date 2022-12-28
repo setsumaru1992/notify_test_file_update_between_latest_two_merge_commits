@@ -12,9 +12,6 @@ runs:
       run: echo '想定外のイベントからこのイベントが使われています。workflow_dispatchかPRのマージイベントから利用してください。' && exit 1
       shell: bash
 
-    - run: echo ${{ toJSON(github) }}
-      shell: bash
-
     # 下準備
     - uses: actions/setup-node@v3
       with:
@@ -147,7 +144,7 @@ runs:
           const testUpdates = extractTestUpdatedDiffs(diffNumstatRowStrings)
           const updateGroups = groupTestUpdates(testUpdates)
           
-          const mergeUser = '${{ github.event.pull_request.sender.name }}' || 'xxx';
+          const mergeUser = '${{ github.event.pull_request.sender.login }}' || 'xxx';
           console.log(createNoticeContent(updateGroups, '${{ github.repository }}', mergeUser))
         }
         main()
