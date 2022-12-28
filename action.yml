@@ -151,3 +151,6 @@ runs:
         
         ") " # >> $GITHUB_OUTPUT
       shell: bash
+
+    - run: echo '${{ toJSON(github) }}'
+      shell: bash
