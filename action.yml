@@ -12,7 +12,7 @@ runs:
       run: echo '想定外のイベントからこのイベントが使われています。workflow_dispatchかPRのマージイベントから利用してください。' && exit 1
       shell: bash
 
-    - run: echo ${{ github.event.pull_request.sender.name }}
+    - run: echo ${{ toJSON(github) }}
 
     # 下準備
     - uses: actions/setup-node@v3
