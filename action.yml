@@ -24,6 +24,12 @@ runs:
     - run: ls ${{ github.workspace }}
       shell: bash
 
+    - run: cd ${{ github.workspace }}
+      shell: bash
+
+    - run: pwd
+      shell: bash
+
     - run: exit 1
       shell: bash
 
