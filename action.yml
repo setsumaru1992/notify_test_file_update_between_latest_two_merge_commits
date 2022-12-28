@@ -8,6 +8,9 @@ runs:
   steps:
     # TODO カスタムアクション使用元でもカスタムアクションのリポジトリを取得できるようにして、カスタムアクション内のパーシャルスクリプトを参照してこのファイルをすっきりさせる
 
+    - if: ${{ !(github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true) }}
+      run: echo '想定外のイベントからこのイベントが使われています。workflow_dispatchかPRのマージイベントから利用してください。' && exit 1
+
     # 下準備
     - uses: actions/checkout@v3 # NOTE: カスタムアクション使用元コードのチェックアウト
     - uses: actions/setup-node@v3
@@ -98,7 +101,7 @@ runs:
         }
         
         const NO_CONTENT = ''
-        function createNoticeContent(updateGroups){
+        function createNoticeContent(updateGroups, repositoryName, mergeUser){
           let noticeContent = NO_CONTENT
           
           if(updateGroups['addedOrGratelyUpdated'].length > 0){
@@ -122,7 +125,7 @@ runs:
           }
         
           if(noticeContent !== NO_CONTENT){
-            noticeContent =  'hogehogeRepositoryのテストファイルにfugaさんが修正を加えました！\n\n' + noticeContent
+            noticeContent = repositoryName + 'のテストファイルに' + mergeUser + 'さんが修正を加えました！\n\n' + noticeContent
           }
         
           return noticeContent
@@ -132,7 +135,9 @@ runs:
           const diffNumstatRowStrings = readDiffFile('diff_stat.txt')
           const testUpdates = extractTestUpdatedDiffs(diffNumstatRowStrings)
           const updateGroups = groupTestUpdates(testUpdates)
-          console.log(createNoticeContent(updateGroups))
+          
+          const mergeUser = '${{ github.event.pull_request.sender.name }}' || 'xxx';
+          console.log(createNoticeContent(updateGroups, '${{ github.repository }}', mergeUser))
         }
         main()
         
