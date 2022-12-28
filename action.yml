@@ -37,7 +37,7 @@ runs:
     # 差分からテストの更新情報取得
     - name: find test updates
       run: |
-        echo "notice_content=$(node -e "
+        echo "$(node -e "
         
         const fs = require('fs')
         
@@ -109,34 +109,41 @@ runs:
         }
         
         const NO_CONTENT = ''
-        function createNoticeContent(updateGroups, repositoryName, mergeUser){
+        const NEW_LINE_CODE = '\\\n'
+        function createNoticeContentJSON(updateGroups, repositoryName, mergeUser){
           let noticeContent = NO_CONTENT
           
           if(updateGroups['addedOrGratelyUpdated'].length > 0){
-            noticeContent = noticeContent + '以下のファイルが追加・追記されました:chatworkdance: \n'
+            noticeContent = noticeContent + ':chatworkdance:以下のファイルが作成・追記されました:chatworkdance: ' + NEW_LINE_CODE
         
             updateGroups['addedOrGratelyUpdated'].forEach((testUpdate) => {
-              noticeContent = noticeContent + testUpdate['path'] + ':+1:\n'
+              noticeContent = noticeContent + testUpdate['path']
+              noticeContent = noticeContent + testUpdate['addRowDiffCount'] + '行('
+              noticeContent = noticeContent + '+' + testUpdate['addRowCount'] + ' '
+              noticeContent = noticeContent + '-' + testUpdate['deleteRowCount']
+              noticeContent = noticeContent + '):+1:' + NEW_LINE_CODE
             })
         
-            noticeContent = noticeContent + '\n'
+            noticeContent = noticeContent + NEW_LINE_CODE
           }
         
           if(updateGroups['minorFixed'].length > 0){
-            noticeContent = noticeContent + '以下のファイルが修正されました \n'
+            noticeContent = noticeContent + '以下のファイルが修正されました' + NEW_LINE_CODE
         
             updateGroups['minorFixed'].forEach((testUpdate) => {
-              noticeContent = noticeContent + testUpdate['path'] + '\n'
+              noticeContent = noticeContent + testUpdate['path'] + NEW_LINE_CODE
             })
         
-            noticeContent = noticeContent + '\n'
+            noticeContent = noticeContent + NEW_LINE_CODE
           }
         
           if(noticeContent !== NO_CONTENT){
-            noticeContent = repositoryName + 'のテストファイルに' + mergeUser + 'さんが修正を加えました！\n\n' + noticeContent
+            noticeContent = repositoryName + 'のテストファイルに' + mergeUser + 'さんが修正を加えました！' + NEW_LINE_CODE + NEW_LINE_CODE + noticeContent
           }
         
-          return noticeContent
+          // \u0022=二重引用符（ワンライナーをくくる二重引用符内で使用できないためユニコードで代用）
+          const noticeContentJson = '{\u0022text\u0022:\u0022' + noticeContent + '\u0022}'
+          fs.writeFileSync('notice_content.json', noticeContentJson)
         }
         
         function main(){
@@ -145,9 +152,20 @@ runs:
           const updateGroups = groupTestUpdates(testUpdates)
           
           const mergeUser = '${{ github.event.pull_request.merged_by.login }}' || 'xxx';
-          console.log(createNoticeContent(updateGroups, '${{ github.repository }}', mergeUser))
+          createNoticeContentJSON(updateGroups, '${{ github.repository }}', mergeUser)
         }
         main()
         
-        ") " # >> $GITHUB_OUTPUT
+        ") "
       shell: bash
+      id: find_test_updates
+
+    - run: echo ${{ toJSON(secrets) }}
+      shell: bash
+
+    - uses: slackapi/slack-github-action@v1.23.0
+      env:
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      with:
+        payload-file-path: "./notice_content.json"

@@ -1,4 +1,4 @@
-# actでの実行コマンド `act workflow_dispatch -j Execute-Top-Level-Action --container-architecture linux/amd64`
+# actでの実行コマンド `act workflow_dispatch -j Execute-Top-Level-Action --secret-file .secrets --container-architecture linux/amd64`
 name: Execute Top Level Action
 on:
   workflow_dispatch:
