@@ -10,6 +10,7 @@ runs:
 
     - if: ${{ !(github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true) }}
       run: echo '想定外のイベントからこのイベントが使われています。workflow_dispatchかPRのマージイベントから利用してください。' && exit 1
+      shell: bash
 
     # 下準備
     - uses: actions/checkout@v3 # NOTE: カスタムアクション使用元コードのチェックアウト
@@ -20,11 +21,14 @@ runs:
     # コミットID取得
     - run: echo "commit1=$( git log --oneline | head -n 100 | grep 'Merge pull request' | awk '{print $1}' | head -n 1 )" >> $GITHUB_OUTPUT
       id: get_commits_1
+      shell: bash
     - run: echo "commit2=$( git log --oneline | head -n 100 | grep 'Merge pull request' | awk '{print $1}' | head -n 2 | tail -n 1 )" >> $GITHUB_OUTPUT
       id: get_commits_2
+      shell: bash
 
     # 差分取得
     - run: git diff ${{steps.get_commits_2.outputs.commit2}}..${{steps.get_commits_1.outputs.commit1}} --numstat > diff_stat.txt
+      shell: bash
 
     # 差分からテストの更新情報取得
     - name: find test updates
@@ -142,3 +146,4 @@ runs:
         main()
         
         ") " # >> $GITHUB_OUTPUT
+      shell: bash
