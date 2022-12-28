@@ -18,15 +18,15 @@ runs:
         node-version: 16
     - uses: actions/checkout@v3 # NOTE: カスタムアクション使用元コードのチェックアウト
       with:
-        fetch-depth: 10
-    - run: cd ${{ github.workspace }}
+        fetch-depth: 50 # デフォルトだと最新しか取得せず、.gitディレクトリも作成されないので、ある程度昔のログとセットで取得するよう設定
+    - run: cd ${{ github.workspace }} # 必要？
       shell: bash
 
     # コミットID取得
-    - run: echo "commit1=$( git log --oneline | head -n 100 | grep 'Merge pull request' | awk '{print $1}' | head -n 1 )" >> $GITHUB_OUTPUT
+    - run: echo "commit1=$( git log --oneline | head -n 100 | grep 'Merge pull request' | grep -v 'Revert' | awk '{print $1}' | head -n 1 )" >> $GITHUB_OUTPUT
       id: get_commits_1
       shell: bash
-    - run: echo "commit2=$( git log --oneline | head -n 100 | grep 'Merge pull request' | awk '{print $1}' | head -n 2 | tail -n 1 )" >> $GITHUB_OUTPUT
+    - run: echo "commit2=$( git log --oneline | head -n 100 | grep 'Merge pull request' | grep -v 'Revert'  | awk '{print $1}' | head -n 2 | tail -n 1 )" >> $GITHUB_OUTPUT
       id: get_commits_2
       shell: bash
 
