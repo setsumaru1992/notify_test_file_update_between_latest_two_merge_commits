@@ -11,8 +11,6 @@ runs:
     - if: ${{ !(github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true) }}
       run: echo '想定外のイベントからこのイベントが使われています。workflow_dispatchかPRのマージイベントから利用してください。' && exit 1
 
-    - run: echo ${{ github.event.pull_request.sender.name }}
-
     # 下準備
     - uses: actions/checkout@v3 # NOTE: カスタムアクション使用元コードのチェックアウト
     - uses: actions/setup-node@v3
