@@ -13,12 +13,12 @@ runs:
       shell: bash
 
     # 下準備
-    - uses: actions/checkout@v3 # NOTE: カスタムアクション使用元コードのチェックアウト
-    - run: cd ${{ github.workspace }}
-      shell: bash
     - uses: actions/setup-node@v3
       with:
         node-version: 16
+    - uses: actions/checkout@v3 # NOTE: カスタムアクション使用元コードのチェックアウト
+    - run: cd ${{ github.workspace }}
+      shell: bash
 
     # コミットID取得
     - run: echo "commit1=$( git log --oneline | head -n 100 | grep 'Merge pull request' | awk '{print $1}' | head -n 1 )" >> $GITHUB_OUTPUT
