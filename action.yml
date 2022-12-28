@@ -42,8 +42,8 @@ runs:
           })
         }
         
-        function extractTestUpdatedDiffs(diffRows){
-          return diffRows.map((rowString) => {
+        function extractTestUpdatedDiffs(diffRowStrings){
+          return diffRowStrings.map((rowString) => {
             const rowElements = rowString.split('\t')
         
             if(rowElements.length !== 3) return null
@@ -55,7 +55,8 @@ runs:
             return {
               path: path, 
               addRowCount: Number(rowElements[0]), 
-              deleteRowCount: Number(rowElements[1])
+              deleteRowCount: Number(rowElements[1]),
+              addRowDiffCount: Number(rowElements[0]) - Number(rowElements[1])
             }
           }).filter((update) => update !== null)
         }
@@ -66,7 +67,7 @@ runs:
             minorFixed: []
           }
           
-          return testUpdates.reduce((updateGroups, testUpdate) => {
+          const updateGroups = testUpdates.reduce((updateGroups, testUpdate) => {
             const addCount = testUpdate['addRowCount']
             const deleteCount = testUpdate['deleteRowCount']
             const addDiffCount = addCount - deleteCount
@@ -82,23 +83,57 @@ runs:
               return updateGroups
             }
           }, initialUpdateGroups)
-          
-        }
         
-        function createNoticeContent(updateGroups){
-          console.log(updateGroups)
+          const sortByAddRowDiffCount = (testUpdateA, testUpdateB) => {
+            if(testUpdateA['addRowDiffCount'] < testUpdateB['addRowDiffCount']){
+              return 1
+            } else {
+              return -1
+            }
+          }
+          updateGroups['addedOrGratelyUpdated'] = updateGroups['addedOrGratelyUpdated'].sort(sortByAddRowDiffCount)
+          updateGroups['minorFixed'] = updateGroups['minorFixed'].sort(sortByAddRowDiffCount)
         
           return updateGroups
         }
         
-        function main(){
-          const diffRows = readDiffFile('diff_stat.txt')
-          const testUpdates = extractTestUpdatedDiffs(diffRows)
-          const updateGroups = groupTestUpdates(testUpdates)
-          const noticeContent = createNoticeContent(updateGroups)
+        const NO_CONTENT = ''
+        function createNoticeContent(updateGroups){
+          let noticeContent = NO_CONTENT
+          
+          if(updateGroups['addedOrGratelyUpdated'].length > 0){
+            noticeContent = noticeContent + '以下のファイルが追加・追記されました:chatworkdance: \n'
+        
+            updateGroups['addedOrGratelyUpdated'].forEach((testUpdate) => {
+              noticeContent = noticeContent + testUpdate['path'] + ':+1:\n'
+            })
+        
+            noticeContent = noticeContent + '\n'
+          }
+        
+          if(updateGroups['minorFixed'].length > 0){
+            noticeContent = noticeContent + '以下のファイルが修正されました \n'
+        
+            updateGroups['minorFixed'].forEach((testUpdate) => {
+              noticeContent = noticeContent + testUpdate['path'] + '\n'
+            })
+        
+            noticeContent = noticeContent + '\n'
+          }
+        
+          if(noticeContent !== NO_CONTENT){
+            noticeContent =  'hogehogeRepositoryのテストファイルにfugaさんが修正を加えました！\n\n' + noticeContent
+          }
+        
           return noticeContent
         }
+        
+        function main(){
+          const diffNumstatRowStrings = readDiffFile('diff_stat.txt')
+          const testUpdates = extractTestUpdatedDiffs(diffNumstatRowStrings)
+          const updateGroups = groupTestUpdates(testUpdates)
+          console.log(createNoticeContent(updateGroups))
+        }
         main()
-        // console.log(main())
         
         ") " # >> $GITHUB_OUTPUT
