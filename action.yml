@@ -17,6 +17,8 @@ runs:
       with:
         node-version: 16
     - uses: actions/checkout@v3 # NOTE: カスタムアクション使用元コードのチェックアウト
+      with:
+        fetch-depth: 10
     - run: cd ${{ github.workspace }}
       shell: bash
 
