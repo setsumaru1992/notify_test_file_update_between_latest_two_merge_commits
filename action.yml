@@ -3,6 +3,10 @@ description: "notify updated test files between latast merge commits"
 branding:
   icon: "user-check"
   color: "white"
+inputs:
+  slack_webhook_url:
+    description: "テスト更新状況を通知する先のSlackのWebhookURL"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -160,12 +164,9 @@ runs:
       shell: bash
       id: find_test_updates
 
-    - run: echo ${{ toJSON(secrets) }}
-      shell: bash
-
     - uses: slackapi/slack-github-action@v1.23.0
       env:
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
       with:
         payload-file-path: "./notice_content.json"
