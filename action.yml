@@ -23,9 +23,6 @@ runs:
     - uses: actions/checkout@v3 # NOTE: カスタムアクションを使用するワークフローのリポジトリをチェックアウト
       with:
         fetch-depth: 50 # デフォルトだと最新しか取得せず、.gitディレクトリも作成されないので、ある程度昔のログとセットで取得するよう設定
-        
-    - run: ls -la
-      shell: bash
 
     # コミットID取得
     - run: echo "commit1=$( git log --oneline | head -n 100 | grep 'Merge pull request' | grep -v 'Revert' | awk '{print $1}' | head -n 1 )" >> $GITHUB_OUTPUT
@@ -42,7 +39,7 @@ runs:
     # 差分からテストの更新情報取得
     - name: find test updates
       run: |
-        echo "$(node -e "
+        echo "exist_notice_content=$(node -e "
         
         const fs = require('fs')
         
@@ -119,11 +116,11 @@ runs:
           let noticeContent = NO_CONTENT
           
           if(updateGroups['addedOrGratelyUpdated'].length > 0){
-            noticeContent = noticeContent + ':chatworkdance:以下のファイルが作成・追記されました:chatworkdance: ' + NEW_LINE_CODE
+            noticeContent = noticeContent + '【 :chatworkdance: 以下のファイルが作成・追記されました :chatworkdance: 】' + NEW_LINE_CODE
         
             updateGroups['addedOrGratelyUpdated'].forEach((testUpdate) => {
               noticeContent = noticeContent + testUpdate['path']
-              noticeContent = noticeContent + testUpdate['addRowDiffCount'] + '行('
+              noticeContent = noticeContent + ' ' +testUpdate['addRowDiffCount'] + '行追加('
               noticeContent = noticeContent + '+' + testUpdate['addRowCount'] + ' '
               noticeContent = noticeContent + '-' + testUpdate['deleteRowCount']
               noticeContent = noticeContent + '):+1:' + NEW_LINE_CODE
@@ -133,7 +130,7 @@ runs:
           }
         
           if(updateGroups['minorFixed'].length > 0){
-            noticeContent = noticeContent + '以下のファイルが修正されました' + NEW_LINE_CODE
+            noticeContent = noticeContent + '【以下のファイルが修正されました】' + NEW_LINE_CODE
         
             updateGroups['minorFixed'].forEach((testUpdate) => {
               noticeContent = noticeContent + testUpdate['path'] + NEW_LINE_CODE
@@ -154,21 +151,24 @@ runs:
         function main(){
           const diffNumstatRowStrings = readDiffFile('diff_stat.txt')
           const testUpdates = extractTestUpdatedDiffs(diffNumstatRowStrings)
-          if(testUpdates.length === 0) return
+          if(testUpdates.length === 0) return false
         
           const updateGroups = groupTestUpdates(testUpdates)
           
           const mergeUser = '${{ github.event.pull_request.merged_by.login }}' || 'xxx';
           createNoticeContentJSON(updateGroups, '${{ github.repository }}', mergeUser)
+          return true
         }
-        main()
+        const exist_notice_content = main()
+        console.log(exist_notice_content)
         
-        ") "
+        // "true"/"false"を返却
+        " )" >> $GITHUB_OUTPUT
       shell: bash
       id: find_test_updates
 
     - uses: slackapi/slack-github-action@v1.23.0
-      # if: ${{  }} # TODO: 通知の必要がない場合実行しない
+      if: ${{ steps.find_test_updates.outputs.exist_notice_content == 'true' }} # TODO: 通知の必要がない場合実行しない
       env:
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
         SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
