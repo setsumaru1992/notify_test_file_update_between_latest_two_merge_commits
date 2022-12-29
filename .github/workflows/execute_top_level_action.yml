@@ -13,4 +13,4 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./
         with:
-          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }} # secretsはワークフローからしか読みだせず、カスタムアクションから読み出せないので注意

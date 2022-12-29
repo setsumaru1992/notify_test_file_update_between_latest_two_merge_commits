@@ -13,17 +13,18 @@ runs:
     # TODO カスタムアクション使用元でもカスタムアクションのリポジトリを取得できるようにして、カスタムアクション内のパーシャルスクリプトを参照してこのファイルをすっきりさせる
 
     - if: ${{ !(github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true) }}
-      run: echo '想定外のイベントからこのイベントが使われています。workflow_dispatchかPRのマージイベントから利用してください。' && exit 1
+      run: echo '想定外のイベントからこのアクションが使われています。workflow_dispatchかPRのマージイベントから利用してください。' && exit 1
       shell: bash
 
     # 下準備
     - uses: actions/setup-node@v3
       with:
         node-version: 16
-    - uses: actions/checkout@v3 # NOTE: カスタムアクション使用元コードのチェックアウト
+    - uses: actions/checkout@v3 # NOTE: カスタムアクションを使用するワークフローのリポジトリをチェックアウト
       with:
         fetch-depth: 50 # デフォルトだと最新しか取得せず、.gitディレクトリも作成されないので、ある程度昔のログとセットで取得するよう設定
-    - run: cd ${{ github.workspace }} # 必要？
+        
+    - run: ls -la
       shell: bash
 
     # コミットID取得
@@ -153,6 +154,8 @@ runs:
         function main(){
           const diffNumstatRowStrings = readDiffFile('diff_stat.txt')
           const testUpdates = extractTestUpdatedDiffs(diffNumstatRowStrings)
+          if(testUpdates.length === 0) return
+        
           const updateGroups = groupTestUpdates(testUpdates)
           
           const mergeUser = '${{ github.event.pull_request.merged_by.login }}' || 'xxx';
@@ -165,6 +168,7 @@ runs:
       id: find_test_updates
 
     - uses: slackapi/slack-github-action@v1.23.0
+      # if: ${{  }} # TODO: 通知の必要がない場合実行しない
       env:
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
         SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
