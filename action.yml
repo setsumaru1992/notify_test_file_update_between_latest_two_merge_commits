@@ -63,7 +63,18 @@ runs:
         
             const path = rowElements[2]
         
-            if(!matchSomeSuffix(path, ['spec.rb', 'spec.ts', 'spec.tsx'])) return null
+            const targetSuffixes = [
+              'spec.rb', 
+              'spec.js', 
+              'spec.jsx',
+              'spec.ts', 
+              'spec.tsx',
+              'story.js', 
+              'story.jsx',
+              'story.ts', 
+              'story.tsx',
+            ]
+            if(!matchSomeSuffix(path, targetSuffixes)) return null
         
             return {
               path: path, 
@@ -112,11 +123,11 @@ runs:
         
         const NO_CONTENT = ''
         const NEW_LINE_CODE = '\\\n'
-        function createNoticeContentJSON(updateGroups, repositoryName, mergeUser){
+        function createNoticeContentJSON(updateGroups, repositoryName, branchName, mergeUser){
           let noticeContent = NO_CONTENT
           
           if(updateGroups['addedOrGratelyUpdated'].length > 0){
-            noticeContent = noticeContent + '【 :chatworkdance: 以下のファイルが作成・追記されました :chatworkdance: 】' + NEW_LINE_CODE
+            noticeContent = noticeContent + ':chatworkdance: 以下のファイルが作成・追記されました :chatworkdance:' + NEW_LINE_CODE
         
             updateGroups['addedOrGratelyUpdated'].forEach((testUpdate) => {
               noticeContent = noticeContent + testUpdate['path']
@@ -130,7 +141,7 @@ runs:
           }
         
           if(updateGroups['minorFixed'].length > 0){
-            noticeContent = noticeContent + '【以下のファイルが修正されました】' + NEW_LINE_CODE
+            noticeContent = noticeContent + '[以下のファイルが修正されました]' + NEW_LINE_CODE
         
             updateGroups['minorFixed'].forEach((testUpdate) => {
               noticeContent = noticeContent + testUpdate['path'] + NEW_LINE_CODE
@@ -140,7 +151,7 @@ runs:
           }
         
           if(noticeContent !== NO_CONTENT){
-            noticeContent = repositoryName + 'のテストファイルに' + mergeUser + 'さんが修正を加えました！' + NEW_LINE_CODE + NEW_LINE_CODE + noticeContent
+            noticeContent = repositoryName + 'のテストファイルに' + branchName + 'ブランチで' + mergeUser + 'さんが修正を加えました！' + NEW_LINE_CODE + NEW_LINE_CODE + noticeContent
           }
         
           // \u0022=二重引用符（ワンライナーをくくる二重引用符内で使用できないためユニコードで代用）
@@ -155,8 +166,14 @@ runs:
         
           const updateGroups = groupTestUpdates(testUpdates)
           
-          const mergeUser = '${{ github.event.pull_request.merged_by.login }}' || 'xxx';
-          createNoticeContentJSON(updateGroups, '${{ github.repository }}', mergeUser)
+          const mergeUser = '${{ github.event.pull_request.merged_by.login }}' || '(ユーザ名)';
+          const branchName = '${{ github.head_ref }}' || '(ブランチ名)';
+          createNoticeContentJSON(
+            updateGroups, 
+            '${{ github.repository }}', 
+            branchName, 
+            mergeUser
+          )
           return true
         }
         const exist_notice_content = main()
